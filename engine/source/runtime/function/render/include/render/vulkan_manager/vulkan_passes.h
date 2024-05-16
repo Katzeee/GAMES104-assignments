@@ -151,7 +151,8 @@ namespace Pilot
 
         void initialize();
 
-        void draw(PColorGradingPass& color_grading_pass,
+        void draw(PSsaoPass&         ssao_pass,
+                  PColorGradingPass& color_grading_pass,
                   PToneMappingPass&  tone_mapping_pass,
                   PUIPass&           ui_pass,
                   PCombineUIPass&    combine_ui_pass,
@@ -159,7 +160,8 @@ namespace Pilot
                   void*              ui_state);
 
         // legacy
-        void drawForward(PColorGradingPass& color_grading_pass,
+        void drawForward(//PSsaoPass&         ssao_pass,
+                         PColorGradingPass& color_grading_pass,
                          PToneMappingPass&  tone_mapping_pass,
                          PUIPass&           ui_pass,
                          PCombineUIPass&    combine_ui_pass,

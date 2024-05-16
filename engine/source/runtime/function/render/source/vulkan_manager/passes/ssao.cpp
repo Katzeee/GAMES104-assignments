@@ -14,9 +14,9 @@ namespace Pilot
     void PSsaoPass::initialize(VkRenderPass render_pass, VkImageView input_attachment)
     {
         _framebuffer.render_pass = render_pass;
-        setupDescriptorSet();
-        setupPipelines();
         setupDescriptorSetLayout();
+        setupPipelines();
+        setupDescriptorSet();
         updateAfterFramebufferRecreate(input_attachment);
     }
 
@@ -165,7 +165,7 @@ namespace Pilot
         VkGraphicsPipelineCreateInfo pipeline_create_info{
 
         };
-        pipeline_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+        pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         pipeline_create_info.stageCount = 2;
         pipeline_create_info.pStages = shader_stages;
         pipeline_create_info.pVertexInputState = &vert_input_state_create_info;
@@ -192,7 +192,7 @@ namespace Pilot
         }
 
         vkDestroyShaderModule(m_p_vulkan_context->_device, vert_shader_module, nullptr);
-        vkDestroyShaderModule(m_p_vulkan_context->_device, vert_shader_module, nullptr);
+        vkDestroyShaderModule(m_p_vulkan_context->_device, frag_shader_module, nullptr);
     }
 
     // allocate descriptor set mem
@@ -262,25 +262,26 @@ namespace Pilot
         {
             VkDebugUtilsLabelEXT label_info = 
                 { VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, "SSAO", {1.0f, 1.0f, 1.0f, 1.0f}};
-            m_p_vulkan_context->_vkCmdBindPipeline(m_command_info._current_command_buffer, 
-                                                   VK_PIPELINE_BIND_POINT_GRAPHICS, 
-                                                    _render_pipelines[0].pipeline);
-            m_p_vulkan_context->_vkCmdSetViewport(m_command_info._current_command_buffer, 0, 1, &m_command_info._viewport);
-            m_p_vulkan_context->_vkCmdSetScissor(m_command_info._current_command_buffer, 0, 1, &m_command_info._scissor);
-            m_p_vulkan_context->_vkCmdBindDescriptorSets(m_command_info._current_command_buffer, 
-                                                         VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                                         _render_pipelines[0].layout,
-                                                         0,
-                                                         1,
-                                                         &_descriptor_infos[0].descriptor_set,
-                                                         0,
-                                                         nullptr);
-            vkCmdDraw(m_command_info._current_command_buffer, 3, 1, 0, 0);
+            m_p_vulkan_context->_vkCmdBeginDebugUtilsLabelEXT(m_command_info._current_command_buffer, &label_info);
+        }
+        m_p_vulkan_context->_vkCmdBindPipeline(m_command_info._current_command_buffer, 
+                                               VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                                               _render_pipelines[0].pipeline);
+        m_p_vulkan_context->_vkCmdSetViewport(m_command_info._current_command_buffer, 0, 1, &m_command_info._viewport);
+        m_p_vulkan_context->_vkCmdSetScissor(m_command_info._current_command_buffer, 0, 1, &m_command_info._scissor);
+        m_p_vulkan_context->_vkCmdBindDescriptorSets(m_command_info._current_command_buffer, 
+                                                     VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                                     _render_pipelines[0].layout,
+                                                     0,
+                                                     1,
+                                                     &_descriptor_infos[0].descriptor_set,
+                                                     0,
+                                                     nullptr);
+        vkCmdDraw(m_command_info._current_command_buffer, 3, 1, 0, 0);
 
-            if (m_render_config._enable_debug_untils_label)
-            {
-                m_p_vulkan_context->_vkCmdEndDebugUtilsLabelEXT(m_command_info._current_command_buffer);
-            }
+        if (m_render_config._enable_debug_untils_label)
+        {
+            m_p_vulkan_context->_vkCmdEndDebugUtilsLabelEXT(m_command_info._current_command_buffer);
         }
     }
 

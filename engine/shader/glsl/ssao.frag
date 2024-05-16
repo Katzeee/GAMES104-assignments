@@ -9,5 +9,7 @@ layout(location = 0) out highp vec4 out_color;
 
 void main()
 {
-    out_color = vec4(1.0f);
+    highp vec3 color = subpassLoad(in_cur_frame).rgb;
+    highp float scene_depth = subpassLoad(in_scene_depth).r;
+    out_color = vec4(color, 1.0f);
 }
