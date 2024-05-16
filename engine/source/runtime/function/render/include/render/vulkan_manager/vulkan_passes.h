@@ -13,6 +13,20 @@ namespace Pilot
         VkImageView directional_light_shadow_color_image_view;
     };
 
+    class PSsaoPass : public PRenderPassBase
+    {
+    public:
+        void initialize(VkRenderPass render_pass, VkImageView input_attachment);
+        void draw();
+
+        void updateAfterFramebufferRecreate(VkImageView input_attachment);
+
+    private:
+        void setupDescriptorSetLayout();
+        void setupPipelines();
+        void setupDescriptorSet();
+    };
+
     class PColorGradingPass : public PRenderPassBase
     {
     public:
@@ -90,6 +104,7 @@ namespace Pilot
         _main_camera_subpass_basepass = 0,
         _main_camera_subpass_deferred_lighting,
         _main_camera_subpass_forward_lighting,
+        _main_camera_subpass_ssao,
         _main_camera_subpass_tone_mapping,
         _main_camera_subpass_color_grading,
         _main_camera_subpass_ui,
