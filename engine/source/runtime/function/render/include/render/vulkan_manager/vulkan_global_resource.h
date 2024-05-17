@@ -77,6 +77,11 @@ namespace Pilot
         VkBuffer       _global_null_descriptor_storage_buffer;
         VkDeviceMemory _global_null_descriptor_storage_buffer_memory;
 
+        // ssao
+        VkBuffer       _ssao_sample_storage_buffer;
+        VkDeviceMemory _ssao_sample_storage_buffer_memory;
+        void*          _ssao_sample_storage_buffer_memory_pointer;
+
         // axis
         VkBuffer       _axis_inefficient_storage_buffer;
         VkDeviceMemory _axis_inefficient_storage_buffer_memory;

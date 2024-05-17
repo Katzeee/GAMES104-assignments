@@ -230,6 +230,15 @@ void Pilot::PGlobalRenderResource::initializeStorageBuffer(PVulkanContext& conte
                               _storage_buffer._axis_inefficient_storage_buffer,
                               _storage_buffer._axis_inefficient_storage_buffer_memory);
 
+    // ssao sample
+    PVulkanUtil::createBuffer(context._physical_device,
+                              context._device,
+                              64 * sizeof(Vector3),
+                              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                              _storage_buffer._ssao_sample_storage_buffer,
+                              _storage_buffer._ssao_sample_storage_buffer_memory);
+
     // null descriptor
     PVulkanUtil::createBuffer(context._physical_device,
                               context._device,
@@ -257,6 +266,13 @@ void Pilot::PGlobalRenderResource::mapStorageBuffer(PVulkanContext& context)
                 VK_WHOLE_SIZE,
                 0,
                 &_storage_buffer._axis_inefficient_storage_buffer_memory_pointer);
+
+    vkMapMemory(context._device,
+                _storage_buffer._ssao_sample_storage_buffer_memory,
+                0,
+                VK_WHOLE_SIZE,
+                0,
+                &_storage_buffer._ssao_sample_storage_buffer_memory_pointer);
 }
 
 void Pilot::PGlobalRenderResource::unmapStorageBuffer(PVulkanContext& context) {}

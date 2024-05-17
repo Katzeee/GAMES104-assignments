@@ -396,6 +396,10 @@ void Pilot::PVulkanManager::clear()
     vkFreeMemory(m_vulkan_context._device,
                  m_global_render_resource._storage_buffer._axis_inefficient_storage_buffer_memory,
                  nullptr);
+    
+    vkUnmapMemory(m_vulkan_context._device, m_global_render_resource._storage_buffer._ssao_sample_storage_buffer_memory);
+    vkDestroyBuffer(m_vulkan_context._device, m_global_render_resource._storage_buffer._ssao_sample_storage_buffer, nullptr);
+    vkFreeMemory(m_vulkan_context._device, m_global_render_resource._storage_buffer._ssao_sample_storage_buffer_memory, nullptr);
 
     vkDestroyBuffer(m_vulkan_context._device,
                     m_global_render_resource._storage_buffer._global_null_descriptor_storage_buffer,

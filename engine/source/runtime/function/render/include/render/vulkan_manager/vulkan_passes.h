@@ -21,12 +21,13 @@ namespace Pilot
         void initialize(VkRenderPass render_pass, VkImageView input_attachment, VkImageView g_buffer_normal_attachment);
         void draw();
 
-        void updateAfterFramebufferRecreate(VkImageView input_attachment, VkImageView g_buffer_normal_attachment);
+        void updateAfterFramebufferRecreate(VkImageView cur_frame_attachment, VkImageView g_buffer_normal_attachment);
 
     private:
         void setupDescriptorSetLayout();
         void setupPipelines();
         void setupDescriptorSet();
+        std::array<Vector3, 64> m_sample_points;
     };
 
     class PColorGradingPass : public PRenderPassBase

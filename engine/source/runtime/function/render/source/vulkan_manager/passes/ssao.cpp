@@ -4,6 +4,7 @@
 #include "runtime/function/render/include/render/vulkan_manager/vulkan_passes.h"
 #include "runtime/function/render/include/render/vulkan_manager/vulkan_util.h"
 
+#include <random>
 #include <ssao_frag.h>
 #include <post_process_vert.h>
 
@@ -23,7 +24,7 @@ namespace Pilot
     {
         _descriptor_infos.resize(1);
 
-        VkDescriptorSetLayoutBinding ssao_desc_set_layout_bindings[3]{};
+        VkDescriptorSetLayoutBinding ssao_desc_set_layout_bindings[4]{};
 
         auto& color_attachment_binding = ssao_desc_set_layout_bindings[0];
         color_attachment_binding.binding = 0;
@@ -43,6 +44,12 @@ namespace Pilot
         g_buffer_normal_attachment_binding.descriptorCount = 1;
         g_buffer_normal_attachment_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+        auto& sample_points_binding = ssao_desc_set_layout_bindings[3];
+        sample_points_binding.binding = 3;
+        sample_points_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        sample_points_binding.descriptorCount = 1;
+        sample_points_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
         VkDescriptorSetLayoutCreateInfo ssao_desc_set_layout_create_info{};
         ssao_desc_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         ssao_desc_set_layout_create_info.pNext = nullptr;
@@ -57,6 +64,18 @@ namespace Pilot
         {
             throw std::runtime_error("create ssao layout error");
         }
+
+        std::uniform_real_distribution<float> random_float(0.0f, 1.0f);
+        std::default_random_engine generator;
+        for (auto i = 0; i < 64; i++) 
+        {
+            m_sample_points[i] = {
+                random_float(generator) * 2.0f - 1.0f,
+                random_float(generator) * 2.0f - 1.0f, 
+                random_float(generator)};
+            m_sample_points[i].normalise();
+        }
+        std::memcpy(m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer_memory_pointer, m_sample_points.data(), m_sample_points.size() * sizeof(Vector3));
     }
 
     void PSsaoPass::setupPipelines()
@@ -212,6 +231,28 @@ namespace Pilot
         {
             throw std::runtime_error("allocate ssao descriptor set fail");
         }
+
+        VkDescriptorBufferInfo sample_point_buffer_info{};
+        sample_point_buffer_info.offset = 0;
+        sample_point_buffer_info.range = m_sample_points.size() * sizeof(Vector3);
+        sample_point_buffer_info.buffer = m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer;
+
+        VkWriteDescriptorSet ssao_descriptor_set[1]{};
+        auto &sample_points_descriptor_set = ssao_descriptor_set[0];
+        sample_points_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        sample_points_descriptor_set.pNext = nullptr;
+        sample_points_descriptor_set.dstSet = _descriptor_infos[0].descriptor_set;
+        sample_points_descriptor_set.dstBinding = 3;
+        sample_points_descriptor_set.dstArrayElement = 0;
+        sample_points_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        sample_points_descriptor_set.descriptorCount = 1;
+        sample_points_descriptor_set.pBufferInfo = &sample_point_buffer_info;
+
+        vkUpdateDescriptorSets(m_p_vulkan_context->_device,
+                               ARRAY_SIZE(ssao_descriptor_set),
+                               ssao_descriptor_set,
+                               0,
+                               nullptr);
     }
 
     // bind descriptor
