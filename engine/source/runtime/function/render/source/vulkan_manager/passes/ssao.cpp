@@ -7,17 +7,15 @@
 #include <ssao_frag.h>
 #include <post_process_vert.h>
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
-
 namespace Pilot
 {
-    void PSsaoPass::initialize(VkRenderPass render_pass, VkImageView input_attachment)
+    void PSsaoPass::initialize(VkRenderPass render_pass, VkImageView input_attachment, VkImageView g_buffer_normal_attachment)
     {
         _framebuffer.render_pass = render_pass;
         setupDescriptorSetLayout();
         setupPipelines();
         setupDescriptorSet();
-        updateAfterFramebufferRecreate(input_attachment);
+        updateAfterFramebufferRecreate(input_attachment, g_buffer_normal_attachment);
     }
 
     // set descriptor set layout
@@ -25,7 +23,7 @@ namespace Pilot
     {
         _descriptor_infos.resize(1);
 
-        VkDescriptorSetLayoutBinding ssao_desc_set_layout_bindings[2]{};
+        VkDescriptorSetLayoutBinding ssao_desc_set_layout_bindings[3]{};
 
         auto& color_attachment_binding = ssao_desc_set_layout_bindings[0];
         color_attachment_binding.binding = 0;
@@ -37,6 +35,13 @@ namespace Pilot
         depth_attachment_binding.binding = 1;
         depth_attachment_binding.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
         depth_attachment_binding.descriptorCount = 1;
+        depth_attachment_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        auto& g_buffer_normal_attachment_binding = ssao_desc_set_layout_bindings[2];
+        g_buffer_normal_attachment_binding.binding = 2;
+        g_buffer_normal_attachment_binding.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        g_buffer_normal_attachment_binding.descriptorCount = 1;
+        g_buffer_normal_attachment_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         VkDescriptorSetLayoutCreateInfo ssao_desc_set_layout_create_info{};
         ssao_desc_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -162,9 +167,7 @@ namespace Pilot
         dynamic_state_create_info.dynamicStateCount = 2;
         dynamic_state_create_info.pDynamicStates = dynamic_state;
 
-        VkGraphicsPipelineCreateInfo pipeline_create_info{
-
-        };
+        VkGraphicsPipelineCreateInfo pipeline_create_info{};
         pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         pipeline_create_info.stageCount = 2;
         pipeline_create_info.pStages = shader_stages;
@@ -212,7 +215,7 @@ namespace Pilot
     }
 
     // bind descriptor
-    void PSsaoPass::updateAfterFramebufferRecreate(VkImageView cur_frame_attachment)
+    void PSsaoPass::updateAfterFramebufferRecreate(VkImageView cur_frame_attachment, VkImageView g_buffer_normal_attachment)
     {
         VkDescriptorImageInfo cur_frame_image_info{};
         cur_frame_image_info.sampler = 
@@ -226,7 +229,13 @@ namespace Pilot
         depth_buffer_image_info.imageView = m_p_vulkan_context->_depth_image_view;
         depth_buffer_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        VkWriteDescriptorSet ssao_descriptor_set[2]{};
+        VkDescriptorImageInfo g_buffer_normal_image_info{};
+        g_buffer_normal_image_info.sampler = 
+            PVulkanUtil::getOrCreateNearestSampler(m_p_vulkan_context->_physical_device, m_p_vulkan_context->_device);
+        g_buffer_normal_image_info.imageView = g_buffer_normal_attachment;
+        g_buffer_normal_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        VkWriteDescriptorSet ssao_descriptor_set[3]{};
 
         auto& cur_frame_attachment_ssao_descriptor_set = ssao_descriptor_set[0];
         cur_frame_attachment_ssao_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -247,6 +256,16 @@ namespace Pilot
         depth_attachment_ssao_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
         depth_attachment_ssao_descriptor_set.descriptorCount = 1;
         depth_attachment_ssao_descriptor_set.pImageInfo = &depth_buffer_image_info;
+
+        auto& g_buffer_normal_attachment_ssao_descriptor_set = ssao_descriptor_set[2];
+        g_buffer_normal_attachment_ssao_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        g_buffer_normal_attachment_ssao_descriptor_set.pNext = nullptr;
+        g_buffer_normal_attachment_ssao_descriptor_set.dstSet = _descriptor_infos[0].descriptor_set;
+        g_buffer_normal_attachment_ssao_descriptor_set.dstBinding = 2;
+        g_buffer_normal_attachment_ssao_descriptor_set.dstArrayElement = 0;
+        g_buffer_normal_attachment_ssao_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        g_buffer_normal_attachment_ssao_descriptor_set.descriptorCount = 1;
+        g_buffer_normal_attachment_ssao_descriptor_set.pImageInfo = &g_buffer_normal_image_info;
 
         vkUpdateDescriptorSets(m_p_vulkan_context->_device, 
                                ARRAY_SIZE(ssao_descriptor_set),

@@ -5,6 +5,8 @@
 #include "runtime/function/render/include/render/vulkan_manager/vulkan_point_light_pass.h"
 #include "runtime/function/render/include/render/vulkan_manager/vulkan_render_pass.h"
 
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
+
 namespace Pilot
 {
     struct PLightPassHelperInfo
@@ -16,10 +18,10 @@ namespace Pilot
     class PSsaoPass : public PRenderPassBase
     {
     public:
-        void initialize(VkRenderPass render_pass, VkImageView input_attachment);
+        void initialize(VkRenderPass render_pass, VkImageView input_attachment, VkImageView g_buffer_normal_attachment);
         void draw();
 
-        void updateAfterFramebufferRecreate(VkImageView input_attachment);
+        void updateAfterFramebufferRecreate(VkImageView input_attachment, VkImageView g_buffer_normal_attachment);
 
     private:
         void setupDescriptorSetLayout();

@@ -237,13 +237,16 @@ namespace Pilot
         forward_lighting_pass.pPreserveAttachments    = NULL;
 
         // SECTION: SSAO
-        VkAttachmentReference ssao_pass_input_attachment_reference[2]{};
+        VkAttachmentReference ssao_pass_input_attachment_reference[3]{};
         ssao_pass_input_attachment_reference[0].attachment =
             &backup_odd_color_attachment_description - attachments;
         ssao_pass_input_attachment_reference[0].layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         ssao_pass_input_attachment_reference[1].attachment =
             &depth_attachment_description - attachments;
         ssao_pass_input_attachment_reference[1].layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ssao_pass_input_attachment_reference[2].attachment =
+            &gbuffer_normal_attachment_description - attachments;
+        ssao_pass_input_attachment_reference[2].layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkAttachmentReference ssao_pass_color_attachment_reference{};
         ssao_pass_color_attachment_reference.attachment =
@@ -252,7 +255,7 @@ namespace Pilot
 
         VkSubpassDescription& ssao_pass   = subpasses[_main_camera_subpass_ssao];
         ssao_pass.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        ssao_pass.inputAttachmentCount    = 2;
+        ssao_pass.inputAttachmentCount    = ARRAY_SIZE(ssao_pass_input_attachment_reference);
         ssao_pass.pInputAttachments       = ssao_pass_input_attachment_reference;
         ssao_pass.colorAttachmentCount    = 1;
         ssao_pass.pColorAttachments       = &ssao_pass_color_attachment_reference;
