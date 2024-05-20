@@ -23,11 +23,18 @@ namespace Pilot
 
         void updateAfterFramebufferRecreate(VkImageView cur_frame_attachment, VkImageView g_buffer_normal_attachment);
 
+        struct Vector3WithPadding {
+            Vector3 point;
+            float _padding_point;
+        };
+
     private:
         void setupDescriptorSetLayout();
         void setupPipelines();
         void setupDescriptorSet();
-        std::array<Vector3, 64> m_sample_points;
+
+        
+        std::array<Vector3WithPadding, 64> m_sample_points;
     };
 
     class PColorGradingPass : public PRenderPassBase

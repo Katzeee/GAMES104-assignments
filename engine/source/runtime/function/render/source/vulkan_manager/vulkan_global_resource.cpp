@@ -233,7 +233,7 @@ void Pilot::PGlobalRenderResource::initializeStorageBuffer(PVulkanContext& conte
     // ssao sample
     PVulkanUtil::createBuffer(context._physical_device,
                               context._device,
-                              64 * sizeof(Vector3),
+                              64 * sizeof(PSsaoPass::Vector3WithPadding),
                               VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                               _storage_buffer._ssao_sample_storage_buffer,

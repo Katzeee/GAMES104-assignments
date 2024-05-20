@@ -7,7 +7,8 @@ layout(input_attachment_index = 1, set = 0, binding = 1) uniform highp subpassIn
 layout(input_attachment_index = 2, set = 0, binding = 2) uniform highp subpassInput in_g_buffer_normal;
 layout(set = 0, binding = 3) readonly buffer _unnamed
 {
-    mediump vec3 sample_point[64];
+    highp vec3 sample_point[64];
+    lowp float _point_padding;
 };
 
 layout(location = 0) out highp vec4 out_color;

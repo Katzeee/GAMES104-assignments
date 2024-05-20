@@ -48,7 +48,7 @@ namespace Pilot
         sample_points_binding.binding = 3;
         sample_points_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         sample_points_binding.descriptorCount = 1;
-        sample_points_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        sample_points_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         VkDescriptorSetLayoutCreateInfo ssao_desc_set_layout_create_info{};
         ssao_desc_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -69,13 +69,13 @@ namespace Pilot
         std::default_random_engine generator;
         for (auto i = 0; i < 64; i++) 
         {
-            m_sample_points[i] = {
+            m_sample_points[i].point = {
                 random_float(generator) * 2.0f - 1.0f,
                 random_float(generator) * 2.0f - 1.0f, 
                 random_float(generator)};
-            m_sample_points[i].normalise();
+            m_sample_points[i].point.normalise();
         }
-        std::memcpy(m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer_memory_pointer, m_sample_points.data(), m_sample_points.size() * sizeof(Vector3));
+        std::memcpy(m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer_memory_pointer, m_sample_points.data(), m_sample_points.size() * sizeof(Vector3WithPadding));
     }
 
     void PSsaoPass::setupPipelines()
@@ -234,7 +234,7 @@ namespace Pilot
 
         VkDescriptorBufferInfo sample_point_buffer_info{};
         sample_point_buffer_info.offset = 0;
-        sample_point_buffer_info.range = m_sample_points.size() * sizeof(Vector3);
+        sample_point_buffer_info.range = m_sample_points.size() * sizeof(Vector3WithPadding);
         sample_point_buffer_info.buffer = m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer;
 
         VkWriteDescriptorSet ssao_descriptor_set[1]{};
