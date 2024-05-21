@@ -8,8 +8,8 @@ void Pilot::PVulkanManager::cullingAndSyncScene(class Scene&                scen
 {
     // set perframe ubo data
     glm::mat4 proj_view_matrix;
+    PCamera*  camera = scene.m_camera.get();
     {
-        PCamera*  camera          = scene.m_camera.get();
         Matrix4x4 view_matrix     = camera->getViewMatrix();
         Matrix4x4 proj_matrix     = camera->getPersProjMatrix();
         Vector3   camera_position = camera->position();
@@ -61,6 +61,10 @@ void Pilot::PVulkanManager::cullingAndSyncScene(class Scene&                scen
 
     // set perframe ubo data
     {
+        m_ssao_pass.m_per_frame_data.far_plane                   = camera->m_zfar;
+        m_ssao_pass.m_per_frame_data.near_plane                  = camera->m_znear;
+        m_ssao_pass.m_per_frame_data.proj_mat                    = GLMUtil::fromMat4x4(camera->getPersProjMatrix());
+
         m_main_camera_pass.m_is_show_axis                        = m_is_show_axis;
         m_main_camera_pass.m_selected_axis                       = m_selected_axis;
         m_main_camera_pass.m_mesh_perframe_storage_buffer_object = m_mesh_perframe_storage_buffer_object;

@@ -67,15 +67,16 @@ namespace Pilot
 
         std::uniform_real_distribution<float> random_float(0.0f, 1.0f);
         std::default_random_engine generator;
-        for (auto i = 0; i < 64; i++) 
+        for (auto & sample_point : m_per_frame_data.sample_points) 
         {
-            m_sample_points[i].point = {
+            sample_point.point = {
                 random_float(generator) * 2.0f - 1.0f,
                 random_float(generator) * 2.0f - 1.0f, 
                 random_float(generator)};
-            m_sample_points[i].point.normalise();
+            sample_point.point.normalise();
+            sample_point._padding_point = 0.0f;
         }
-        std::memcpy(m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer_memory_pointer, m_sample_points.data(), m_sample_points.size() * sizeof(Vector3WithPadding));
+        std::memcpy(m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer_memory_pointer, &m_per_frame_data, sizeof(PerFrameData));
     }
 
     void PSsaoPass::setupPipelines()
@@ -217,7 +218,7 @@ namespace Pilot
         vkDestroyShaderModule(m_p_vulkan_context->_device, frag_shader_module, nullptr);
     }
 
-    // allocate descriptor set mem
+    // allocate descriptor set's memory
     void PSsaoPass::setupDescriptorSet()
     {
         VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
@@ -234,7 +235,7 @@ namespace Pilot
 
         VkDescriptorBufferInfo sample_point_buffer_info{};
         sample_point_buffer_info.offset = 0;
-        sample_point_buffer_info.range = m_sample_points.size() * sizeof(Vector3WithPadding);
+        sample_point_buffer_info.range = sizeof(PerFrameData);
         sample_point_buffer_info.buffer = m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer;
 
         VkWriteDescriptorSet ssao_descriptor_set[1]{};
@@ -329,6 +330,9 @@ namespace Pilot
                                                _render_pipelines[0].pipeline);
         m_p_vulkan_context->_vkCmdSetViewport(m_command_info._current_command_buffer, 0, 1, &m_command_info._viewport);
         m_p_vulkan_context->_vkCmdSetScissor(m_command_info._current_command_buffer, 0, 1, &m_command_info._scissor);
+        reinterpret_cast<PerFrameData*>(reinterpret_cast<uintptr_t>(m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer_memory_pointer))->near_plane = m_per_frame_data.near_plane;
+        reinterpret_cast<PerFrameData*>(reinterpret_cast<uintptr_t>(m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer_memory_pointer))->far_plane = m_per_frame_data.far_plane;
+        reinterpret_cast<PerFrameData*>(reinterpret_cast<uintptr_t>(m_p_global_render_resource->_storage_buffer._ssao_sample_storage_buffer_memory_pointer))->proj_mat = m_per_frame_data.proj_mat;
         m_p_vulkan_context->_vkCmdBindDescriptorSets(m_command_info._current_command_buffer, 
                                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
                                                      _render_pipelines[0].layout,
