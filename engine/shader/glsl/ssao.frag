@@ -58,6 +58,7 @@ void main()
         offset.xyz /= offset.w;
         // offset
         highp float sample_depth = texture2D(subpassLoad(in_scene_depth), offset.xy).r;
+        // highp float sample_depth = subpassLoad(in_scene_depth).r;
 
         highp float range_check = smoothstep(0.0, 1.0, radius / abs(view_position.z - sample_depth));
         oc += (sample_depth > sample_vec.z ? 1.0 : 0.0) * range_check;
